@@ -1,0 +1,22 @@
+<h1 *ngIf="!data.isEdit" class="header">Create User</h1>
+<h1 *ngIf="data.isEdit" class="header">Edit User</h1>
+<form [formGroup]="form" class="form">
+  <mat-form-field>
+    <mat-label>Name:</mat-label>
+    <input matInput formControlName="name">
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Email:</mat-label>
+    <input matInput formControlName="email">
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Phone:</mat-label>
+    <input matInput formControlName="phone">
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>WebSite:</mat-label>
+    <input matInput formControlName="website">
+  </mat-form-field>
+  <button mat-raised-button color="accent" *ngIf="!data.isEdit" [mat-dialog-close]="infoFullFields">Create</button>
+  <button mat-raised-button color="primary" *ngIf="data.isEdit" [mat-dialog-close]="infoFullFields">Edit</button>
+</form>
