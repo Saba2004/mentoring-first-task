@@ -1,6 +1,6 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {UsersApiService} from "../../services/users-api.service";
-import {Observable} from "rxjs";
+import {Observable, take} from "rxjs";
 import {User} from "../../models/user";
 import {UsersService} from "../../services/users.service";
 import {AsyncPipe, NgForOf} from "@angular/common";
@@ -11,6 +11,9 @@ import {MatButton} from "@angular/material/button";
 import {UserForm} from "../../models/form-user";
 import {LocalstorageService} from "../../services/localstorage.service";
 import {DeleteDialogComponent} from "../delete-dialog/delete-dialog.component";
+import {Store} from "@ngrx/store";
+import {selectUsers} from "../../Store/StoreUsers/users.selector";
+import {UsersActions} from "../../Store/StoreUsers/users.action";
 
 
 
@@ -31,29 +34,21 @@ export class UsersListComponent implements OnInit {
   private ApiService = inject(UsersApiService)
   private UsersService = inject(UsersService);
   private Storage = inject(LocalstorageService);
+  private store = inject(Store);
 
   public dialog = inject(MatDialog);
-  users: Observable<User[]> = this.UsersService.users;
+  users!: Observable<User[]>;
 
-  constructor() {
-  }
   ngOnInit(): void {
-    if(this.UsersService.getUsers()){
-      this.UsersService.getUsers()
-    } else {
-      this.ApiService.getUsers().subscribe((response: User[]) => {
-        this.UsersService.setUsers(response);
-        this.Storage.setItems('users',response);
-      })
-    }
+    this.users = this.store.select(selectUsers);
+    this.store.dispatch(UsersActions.loadUser({text: 'cool'}))
   }
 
   deleteUser(userId: number): void {
     this.dialog.open(DeleteDialogComponent, {}).afterClosed()
       .subscribe((result: Boolean) => {
         if(result){
-          this.UsersService.deleteUser(userId)
-          this.Storage.deleteUser(userId)
+          this.store.dispatch(UsersActions.deleteUser({userId: userId}))
         }
       })
   }
@@ -65,10 +60,13 @@ export class UsersListComponent implements OnInit {
       if(response){
         if(user){
           const userId = user.id
-          this.UsersService.editUser({id: userId,...response});
-
+          this.store.dispatch(UsersActions.editUser({editedUser: {id: userId,...response}}))
         } else {
-          this.UsersService.createUser(response);
+          const newUser: User = {
+            id: new Date().getTime(),
+            ...response
+          }
+          this.store.dispatch(UsersActions.createUser({user: newUser}))
         }
       }
     })
